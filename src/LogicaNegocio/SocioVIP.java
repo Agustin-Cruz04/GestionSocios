@@ -18,8 +18,8 @@ public class SocioVIP extends Socio {
     }
 
     @Override
-    public String getTipoMembresia() {
-        return "VIP";
+    public TipoMembresia getTipoMembresia() {
+        return TipoMembresia.VIP;
     }
 
     public double getAdicionalZonasExclusivas() {

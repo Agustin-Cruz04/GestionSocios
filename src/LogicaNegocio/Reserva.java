@@ -45,9 +45,4 @@ public class Reserva implements Serializable {
     public int hashCode() {
         return Objects.hash(this.dniSocio, this.actividad, this.horario);
     }
-
-    @Override
-    public String toString() {
-        return actividad + " - " + horario + " (DNI " + dniSocio + ")";
-    }
 }

@@ -23,9 +23,11 @@ public class PruebaReservas {
 
         File archivo = File.createTempFile("socios_reservas", ".dat");
         archivo.delete();
+        File archivoEquipo = File.createTempFile("equipo_reservas", ".dat");
+        archivoEquipo.delete();
 
         try {
-            Logica logica = new Logica(new AccesoDatos(archivo.getPath()));
+            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
             Socio carlos = new SocioEstandar("30111222", "Carlos", "Gomez", "c@mail.com", "11-1111",
                     logica.valorBaseCuota());
             Socio valeria = new SocioEstandar("32333444", "Valeria", "Lopez", "v@mail.com", "11-2222",
@@ -101,6 +103,7 @@ public class PruebaReservas {
 
         } finally {
             archivo.delete();
+            archivoEquipo.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

@@ -14,7 +14,7 @@ public class SocioEstandar extends Socio {
     }
 
     @Override
-    public String getTipoMembresia() {
-        return "Estandar";
+    public TipoMembresia getTipoMembresia() {
+        return TipoMembresia.ESTANDAR;
     }
 }

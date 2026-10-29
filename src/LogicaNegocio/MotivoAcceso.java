@@ -2,7 +2,7 @@ package LogicaNegocio;
 
 public enum MotivoAcceso {
     PERMITIDO,
-    DADO_DE_BAJA,
+    SOCIO_DE_BAJA,
     CUOTAS_IMPAGAS,
-    SANCIONADO
+    SANCION_VIGENTE
 }

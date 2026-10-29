@@ -6,6 +6,7 @@ import Datos.PersistenciaException;
 import LogicaNegocio.DniInvalidoException;
 import LogicaNegocio.Logica;
 import LogicaNegocio.Socio;
+import LogicaNegocio.TipoMembresia;
 import LogicaNegocio.SocioBecado;
 import LogicaNegocio.SocioDuplicadoException;
 import LogicaNegocio.SocioEstandar;
@@ -25,9 +26,11 @@ public class PruebaLogica {
 
         File archivo = File.createTempFile("socios_logica", ".dat");
         archivo.delete();
+        File archivoEquipo = File.createTempFile("equipo_logica", ".dat");
+        archivoEquipo.delete();
 
         try {
-            Logica logica = new Logica(new AccesoDatos(archivo.getPath()));
+            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
             comprobar("Primer arranque sin archivo: empieza con 0 socios", logica.totalSocios() == 0);
 
             Socio carlos = new SocioEstandar("30111222", "Carlos", "Gomez", "c@mail.com", "11-1111",
@@ -108,12 +111,13 @@ public class PruebaLogica {
                     lista.get(0) == carlos && lista.get(1) == valeria && lista.get(2) == lucas);
 
             System.out.println("\n--- Criterio 3: persistencia (se 'reinicia' el programa) ---");
-            Logica reiniciada = new Logica(new AccesoDatos(archivo.getPath()));
+            Logica reiniciada = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
             comprobar("Al iniciar Logica se cargan los 3 socios del archivo", reiniciada.totalSocios() == 3);
             try {
                 Socio recuperada = reiniciada.consultarPorDni("32333444");
                 comprobar("Valeria recuperada sigue siendo VIP con cuota 14000",
-                        recuperada.getTipoMembresia().equals("VIP") && recuperada.calcularCuotaMensual() == 14000);
+                        recuperada.getTipoMembresia() == TipoMembresia.VIP
+                                && recuperada.calcularCuotaMensual() == 14000);
             } catch (SocioNoEncontradoException | DniInvalidoException e) {
                 comprobar("Valeria debe existir tras reiniciar", false);
             }
@@ -127,12 +131,13 @@ public class PruebaLogica {
             }
 
             System.out.println("\n--- Si falla el archivo, el alta se deshace ---");
-            Logica sinDisco = new Logica(new AccesoDatos("carpeta_que_no_existe/Socios.txt"));
+            Logica sinDisco = new Logica(
+                    new AccesoDatos("carpeta_que_no_existe/Socios.txt", "carpeta_que_no_existe/Equipamiento.txt"));
             try {
                 sinDisco.darDeAlta(new SocioEstandar("111", "A", "B", "e", "t", 1));
                 comprobar("Debio lanzar PersistenciaException", false);
             } catch (PersistenciaException e) {
-                comprobar("Falla de archivo -> PersistenciaException (ESCRITURA)",
+                comprobar("Falla de archivo -> PersistenciaException (escritura)",
                         e.getMotivo() == MotivoFallo.ESCRITURA);
             } catch (SocioDuplicadoException | DniInvalidoException e) {
                 comprobar("No debia ser duplicado ni invalido", false);
@@ -141,6 +146,7 @@ public class PruebaLogica {
 
         } finally {
             archivo.delete();
+            archivoEquipo.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

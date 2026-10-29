@@ -19,8 +19,8 @@ public class SocioBecado extends Socio {
     }
 
     @Override
-    public String getTipoMembresia() {
-        return "Becado";
+    public TipoMembresia getTipoMembresia() {
+        return TipoMembresia.BECADO;
     }
 
     public double getPorcentajeDescuento() {

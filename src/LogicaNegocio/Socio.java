@@ -1,6 +1,9 @@
 package LogicaNegocio;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class Socio implements Serializable, Comparable<Socio> {
@@ -17,6 +20,8 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
     protected boolean cuotasAlDia;
     protected boolean sancionado;
     protected String motivoSancion;
+    protected double recargoPendiente;
+    protected List<Advertencia> advertencias = new ArrayList<Advertencia>();
 
     public Socio(String dni, String nombre, String apellido, String email, String telefono, double cuotaBase) {
         this.dni = dni;
@@ -29,23 +34,24 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
         this.cuotasAlDia = true;
         this.sancionado = false;
         this.motivoSancion = "";
+        this.recargoPendiente = 0;
     }
 
     public abstract double calcularCuotaMensual();
 
-    public abstract String getTipoMembresia();
+    public abstract TipoMembresia getTipoMembresia();
 
     public boolean isHabilitadoAcceso() {
         return activo && cuotasAlDia && !sancionado;
     }
 
-    public MotivoAcceso getMotivoRechazoAcceso() {
+    public MotivoAcceso getMotivoAcceso() {
         if (!activo)
-            return MotivoAcceso.DADO_DE_BAJA;
+            return MotivoAcceso.SOCIO_DE_BAJA;
         if (!cuotasAlDia)
             return MotivoAcceso.CUOTAS_IMPAGAS;
         if (sancionado)
-            return MotivoAcceso.SANCIONADO;
+            return MotivoAcceso.SANCION_VIGENTE;
         return MotivoAcceso.PERMITIDO;
     }
 
@@ -65,6 +71,53 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
 
     public void registrarPagoCuota() {
         this.cuotasAlDia = true;
+    }
+
+    // Recargos y advertencias
+
+    public double getRecargoPendiente() {
+        return recargoPendiente;
+    }
+
+    public void sumarRecargo(double monto) {
+        this.recargoPendiente += monto;
+    }
+
+    public void restarRecargo(double monto) {
+        this.recargoPendiente -= monto;
+        if (this.recargoPendiente < 0) {
+            this.recargoPendiente = 0;
+        }
+    }
+
+    // facturacion devuelve el recargo y lo deja en cero
+    public double cobrarRecargoPendiente() {
+        double monto = recargoPendiente;
+        recargoPendiente = 0;
+        return monto;
+    }
+
+    public void agregarAdvertencia(Advertencia advertencia) {
+        listaAdvertencias().add(advertencia);
+    }
+
+    public void quitarUltimaAdvertencia() {
+        List<Advertencia> lista = listaAdvertencias();
+        if (!lista.isEmpty()) {
+            lista.remove(lista.size() - 1);
+        }
+    }
+
+    public List<Advertencia> getAdvertencias() {
+        return Collections.unmodifiableList(listaAdvertencias());
+    }
+
+    // Si el socio viene de un Socios.txt viejo llega null la lista
+    private List<Advertencia> listaAdvertencias() {
+        if (advertencias == null) {
+            advertencias = new ArrayList<Advertencia>();
+        }
+        return advertencias;
     }
 
     public String getDni() {

@@ -13,7 +13,6 @@ public class Inicio {
             Menu menu = new Menu(logica);
             menu.ejecutar();
         } catch (PersistenciaException e) {
-
             System.out.println(Mensajes.errorPersistencia(e));
         }
     }
