@@ -6,7 +6,8 @@ public class SocioBecado extends Socio {
 
     private double porcentajeDescuento;
 
-    public SocioBecado(String dni, String nombre, String apellido, String email, String telefono, double cuotaBase, double porcentajeDescuento) {
+    public SocioBecado(String dni, String nombre, String apellido, String email, String telefono, double cuotaBase,
+            double porcentajeDescuento) {
         super(dni, nombre, apellido, email, telefono, cuotaBase);
         this.porcentajeDescuento = porcentajeDescuento;
     }

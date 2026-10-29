@@ -6,7 +6,8 @@ public class SocioVIP extends Socio {
 
     private double adicionalZonasExclusivas;
 
-    public SocioVIP(String dni, String nombre, String apellido, String email, String telefono, double cuotaBase, double adicionalZonasExclusivas) {
+    public SocioVIP(String dni, String nombre, String apellido, String email, String telefono, double cuotaBase,
+            double adicionalZonasExclusivas) {
         super(dni, nombre, apellido, email, telefono, cuotaBase);
         this.adicionalZonasExclusivas = adicionalZonasExclusivas;
     }

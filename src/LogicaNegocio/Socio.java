@@ -39,11 +39,14 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
         return activo && cuotasAlDia && !sancionado;
     }
 
-    public String getMotivoRechazoAcceso() {
-        if (!activo) return "El socio esta dado de baja.";
-        if (!cuotasAlDia) return "El socio tiene cuotas impagas.";
-        if (sancionado) return "Sancion vigente: " + motivoSancion;
-        return "Acceso permitido.";
+    public MotivoAcceso getMotivoRechazoAcceso() {
+        if (!activo)
+            return MotivoAcceso.DADO_DE_BAJA;
+        if (!cuotasAlDia)
+            return MotivoAcceso.CUOTAS_IMPAGAS;
+        if (sancionado)
+            return MotivoAcceso.SANCIONADO;
+        return MotivoAcceso.PERMITIDO;
     }
 
     public void aplicarSancion(String motivo) {
@@ -138,8 +141,10 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || !(obj instanceof Socio)) return false;
+        if (this == obj)
+            return true;
+        if (obj == null || !(obj instanceof Socio))
+            return false;
         Socio other = (Socio) obj;
         return Objects.equals(this.dni, other.dni);
     }
@@ -151,13 +156,8 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
 
     @Override
     public int compareTo(Socio otro) {
-        if (otro == null) return 1;
+        if (otro == null)
+            return 1;
         return this.dni.compareTo(otro.dni);
-    }
-
-    @Override
-    public String toString() {
-        return "[" + getTipoMembresia() + "] DNI: " + dni + " - " + apellido + ", " + nombre +
-               " | Cuota: $" + calcularCuotaMensual() + " | Activo: " + activo + " | Al dia: " + cuotasAlDia;
     }
 }
