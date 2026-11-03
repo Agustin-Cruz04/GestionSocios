@@ -33,7 +33,9 @@ public class PruebaAccesoDatos {
         archivo.delete(); // se empieza SIN archivo
         File archivoEquipo = File.createTempFile("equipamiento_prueba", ".dat");
         archivoEquipo.delete();
-        AccesoDatos datos = new AccesoDatos(archivo.getPath(), archivoEquipo.getPath());
+        File archivoFacturas = File.createTempFile("facturas_prueba", ".dat");
+        archivoFacturas.delete();
+        AccesoDatos datos = new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoFacturas.getPath());
 
         try {
             System.out.println("\n--- 1. Archivo inexistente ---");
@@ -102,12 +104,12 @@ public class PruebaAccesoDatos {
             probarLecturaFallida(datos, MotivoFallo.FORMATO_INVALIDO, "Contenido de otro tipo");
 
             System.out.println("\n--- 7. La ruta es una carpeta (no se puede leer como archivo) ---");
-            AccesoDatos conCarpeta = new AccesoDatos(System.getProperty("java.io.tmpdir"), archivoEquipo.getPath());
+            AccesoDatos conCarpeta = new AccesoDatos(System.getProperty("java.io.tmpdir"), archivoEquipo.getPath(), archivoFacturas.getPath());
             probarLecturaFallida(conCarpeta, MotivoFallo.LECTURA, "Ruta que es una carpeta");
 
             System.out.println("\n--- 8. Error al escribir (carpeta inexistente) ---");
             AccesoDatos imposible = new AccesoDatos("carpeta_que_no_existe/Socios.txt",
-                    "carpeta_que_no_existe/Equipamiento.txt");
+                    "carpeta_que_no_existe/Equipamiento.txt", "carpeta_que_no_existe/Facturas.txt");
             try {
                 imposible.grabarSocios(new HashMap<String, Socio>());
                 comprobar("Debio fallar al escribir en una carpeta inexistente", false);
@@ -176,6 +178,7 @@ public class PruebaAccesoDatos {
         } finally {
             archivo.delete(); // limpia el archivo temporal
             archivoEquipo.delete();
+            archivoFacturas.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

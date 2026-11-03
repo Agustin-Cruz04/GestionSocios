@@ -2,6 +2,7 @@ package Datos;
 
 import LogicaNegocio.Alquiler;
 import LogicaNegocio.Equipamiento;
+import LogicaNegocio.Factura;
 import LogicaNegocio.RegistroEquipamiento;
 import LogicaNegocio.Socio;
 
@@ -16,6 +17,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,17 +25,20 @@ public class AccesoDatos {
 
     private static final String ARCHIVO_SOCIOS = "Socios.txt";
     private static final String ARCHIVO_EQUIPAMIENTO = "Equipamiento.txt";
+    private static final String ARCHIVO_FACTURAS = "Facturas.txt";
 
     private final String rutaSocios;
     private final String rutaEquipamiento;
+    private final String rutaFacturas;
 
     public AccesoDatos() {
-        this(ARCHIVO_SOCIOS, ARCHIVO_EQUIPAMIENTO);
+        this(ARCHIVO_SOCIOS, ARCHIVO_EQUIPAMIENTO, ARCHIVO_FACTURAS);
     }
 
-    public AccesoDatos(String rutaSocios, String rutaEquipamiento) {
+    public AccesoDatos(String rutaSocios, String rutaEquipamiento, String rutaFacturas) {
         this.rutaSocios = Objects.requireNonNull(rutaSocios);
         this.rutaEquipamiento = Objects.requireNonNull(rutaEquipamiento);
+        this.rutaFacturas = Objects.requireNonNull(rutaFacturas);
     }
 
     // Socios.txt
@@ -77,6 +82,31 @@ public class AccesoDatos {
             return (RegistroEquipamiento) contenido;
         } catch (ClassCastException e) {
             throw new PersistenciaException(MotivoFallo.FORMATO_INVALIDO, rutaEquipamiento, e);
+        }
+    }
+
+    // Facturas.txt
+
+    public void grabarFacturas(Map<String, List<Factura>> facturas) throws PersistenciaException {
+        Objects.requireNonNull(facturas);
+        Map<String, List<Factura>> copia = new HashMap<String, List<Factura>>();
+        for (Map.Entry<String, List<Factura>> entrada : facturas.entrySet()) {
+            copia.put(entrada.getKey(), new ArrayList<Factura>(entrada.getValue()));
+        }
+        escribirEnArchivo(rutaFacturas, copia);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, List<Factura>> leerFacturas() throws PersistenciaException {
+        Object contenido = leerDeArchivo(rutaFacturas);
+
+        if (contenido == null) {
+            return new HashMap<String, List<Factura>>();
+        }
+        try {
+            return (Map<String, List<Factura>>) contenido;
+        } catch (ClassCastException e) {
+            throw new PersistenciaException(MotivoFallo.FORMATO_INVALIDO, rutaFacturas, e);
         }
     }
 

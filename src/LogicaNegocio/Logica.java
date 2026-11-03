@@ -27,12 +27,16 @@ public class Logica {
 
     private final Map<String, Set<Reserva>> reservasPorActividad = new HashMap<String, Set<Reserva>>();
 
+    private final Map<String, List<Factura>> facturasPorSocio = new HashMap<String, List<Factura>>();
+    private int proximoNumeroFactura = 1;
+
     private final AccesoDatos persistencia;
 
     public Logica(AccesoDatos persistencia) throws PersistenciaException {
         this.persistencia = Objects.requireNonNull(persistencia);
         traerSociosDelArchivo();
         traerEquipamientoDelArchivo();
+        traerFacturasDelArchivo();
     }
 
     public double valorBaseCuota() {
@@ -310,7 +314,106 @@ public class Logica {
         return total;
     }
 
+    // FACTURAS (TS3-01)
+
+    public Factura emitirFacturaCuota(String dni, LocalDate fecha)
+            throws SocioNoEncontradoException, DniInvalidoException, PersistenciaException {
+        Objects.requireNonNull(fecha);
+        Socio socio = consultarPorDni(dni);
+
+        double recargo = socio.cobrarRecargoPendiente();
+        Factura nueva = agregarFactura(socio.getDni(), TipoFactura.CUOTA,
+                socio.calcularCuotaMensual() + recargo, fecha);
+
+        try {
+            volcarFacturasAlArchivo();
+            if (recargo > 0) {
+                volcarSociosAlArchivo();
+            }
+        } catch (PersistenciaException e) {
+            quitarFactura(nueva);
+            socio.sumarRecargo(recargo);
+            throw e;
+        }
+        return nueva;
+    }
+
+    public Factura emitirFactura(String dni, TipoFactura tipo, double monto, LocalDate fecha)
+            throws SocioNoEncontradoException, DniInvalidoException, PersistenciaException {
+        Socio socio = consultarPorDni(dni);
+        Factura nueva = agregarFactura(socio.getDni(), tipo, monto, fecha);
+
+        try {
+            volcarFacturasAlArchivo();
+        } catch (PersistenciaException e) {
+            quitarFactura(nueva);
+            throw e;
+        }
+        return nueva;
+    }
+
+    public List<Factura> facturasDeSocio(String dni) throws DniInvalidoException {
+        List<Factura> facturas = facturasPorSocio.get(limpiarDni(dni));
+        if (facturas == null) {
+            return new ArrayList<Factura>();
+        }
+        return new ArrayList<Factura>(facturas);
+    }
+
+    public List<Factura> facturasDeSocioEnPeriodo(String dni, int anio, int mes) throws DniInvalidoException {
+        List<Factura> delPeriodo = new ArrayList<Factura>();
+        for (Factura f : facturasDeSocio(dni)) {
+            if (f.getAnio() == anio && f.getMes() == mes) {
+                delPeriodo.add(f);
+            }
+        }
+        return delPeriodo;
+    }
+
+    public int totalFacturas() {
+        int total = 0;
+        for (List<Factura> facturas : facturasPorSocio.values()) {
+            total += facturas.size();
+        }
+        return total;
+    }
+
+    private Factura agregarFactura(String dni, TipoFactura tipo, double monto, LocalDate fecha) {
+        Factura nueva = new Factura(proximoNumeroFactura, dni, tipo, monto, fecha);
+        List<Factura> facturas = facturasPorSocio.get(dni);
+        if (facturas == null) {
+            facturas = new ArrayList<Factura>();
+            facturasPorSocio.put(dni, facturas);
+        }
+        facturas.add(nueva);
+        proximoNumeroFactura++;
+        return nueva;
+    }
+
+    private void quitarFactura(Factura factura) {
+        facturasPorSocio.get(factura.getDniSocio()).remove(factura);
+        proximoNumeroFactura--;
+    }
+
     // Persistencia de datos
+
+    private void traerFacturasDelArchivo() throws PersistenciaException {
+        facturasPorSocio.putAll(persistencia.leerFacturas());
+
+        int mayor = 0;
+        for (List<Factura> facturas : facturasPorSocio.values()) {
+            for (Factura f : facturas) {
+                if (f.getNumero() > mayor) {
+                    mayor = f.getNumero();
+                }
+            }
+        }
+        proximoNumeroFactura = mayor + 1;
+    }
+
+    private void volcarFacturasAlArchivo() throws PersistenciaException {
+        persistencia.grabarFacturas(facturasPorSocio);
+    }
 
     private void traerSociosDelArchivo() throws PersistenciaException {
         indicePorDni.putAll(persistencia.leerSocios());
