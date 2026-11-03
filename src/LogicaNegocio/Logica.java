@@ -346,4 +346,15 @@ public class Logica {
         }
         return dni.trim();
     }
+    //CONTROL DE ACCESO-MOLINETE (TS2-03)
+    public void registrarAccesoMolinete(String dni) 
+    		throws SocioNoEncontradoException, DniInvalidoException, AccesoDenegadoException {
+         //para buscar al socio
+        Socio socio = consultarPorDni(dni);
+        //corroboramos si cumple con o no con con la condicion de acceso
+        if (!socio.isHabilitadoAcceso()) {
+            throw new AccesoDenegadoException(socio.getMotivoAcceso(), socio.getMotivoSancion());
+        }
+        
+    }
 }
