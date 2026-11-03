@@ -21,8 +21,8 @@ import java.util.Objects;
 
 public class AccesoDatos {
 
-    private static final String ARCHIVO_SOCIOS = "Socios.txt";
-    private static final String ARCHIVO_EQUIPAMIENTO = "Equipamiento.txt";
+    private static final String ARCHIVO_SOCIOS = "GestionSocios\\Socios.txt";
+    private static final String ARCHIVO_EQUIPAMIENTO = "GestionSocios\\Equipamiento.txt";
 
     private final String rutaSocios;
     private final String rutaEquipamiento;
