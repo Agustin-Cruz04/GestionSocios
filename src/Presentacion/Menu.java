@@ -163,7 +163,8 @@ public class Menu {
     private void molinete() {
         String dni = pedirTexto(Mensajes.PEDIR_DNI_MOLINETE);
         try {
-            logica.registrarAccesoMolinete(dni);            mostrar(Mensajes.ACCESO_AUTORIZADO);
+            logica.registrarAccesoMolinete(dni);            
+            mostrar(Mensajes.ACCESO_AUTORIZADO);
         } catch (SocioNoEncontradoException e) {
             mostrar(Mensajes.errorSocioNoEncontrado(e.getDni()));
         } catch (DniInvalidoException e) {
