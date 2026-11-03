@@ -78,6 +78,10 @@ public class Menu {
                     case 10:
                         verReservasDeActividad();
                         break;
+                    //CONTROL DE ACCESO-MOLINETE (TS2-03)
+                    case 11:
+                    	molinete();
+                    	break;
                     case 0:
                         mostrar(Mensajes.DESPEDIDA);
                         break;
@@ -153,6 +157,19 @@ public class Menu {
         mostrar(Mensajes.ENCABEZADO_LISTADO);
         for (Socio s : socios) {
             mostrar(Mensajes.lineaListado(s));
+        }
+    }
+    //CONTROL DE ACCESO-MOLINETE (TS2-03)
+    private void molinete() {
+        String dni = pedirTexto(Mensajes.PEDIR_DNI_MOLINETE);
+        try {
+            logica.registrarAccesoMolinete(dni);            mostrar(Mensajes.ACCESO_AUTORIZADO);
+        } catch (SocioNoEncontradoException e) {
+            mostrar(Mensajes.errorSocioNoEncontrado(e.getDni()));
+        } catch (DniInvalidoException e) {
+            mostrar(Mensajes.ERROR_DNI_INVALIDO);
+        } catch (AccesoDenegadoException e) {
+            mostrar(Mensajes.errorAccesoMolinete(e.getMotivo(), e.getMotivoSancion()));
         }
     }
 

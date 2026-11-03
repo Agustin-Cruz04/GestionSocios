@@ -57,6 +57,9 @@ public final class Mensajes {
                 + "--- Actividades ---" + n
                 + "9. Reservar actividad" + n
                 + "10. Ver reservas de una actividad" + n
+                + "--- Control de Acceso ---" + n
+                //CONTROL DE ACCESO-MOLINETE (TS2-03)
+                + "11. Molinete (Check-in)" + n
                 + "0. Salir";
     }
 
@@ -75,7 +78,15 @@ public final class Mensajes {
     public static final String SIN_SOCIOS = "Todavia no hay socios registrados.";
     public static final String ENCABEZADO_LISTADO = "--- Socios registrados (ordenados por DNI) ---";
     public static final String ERROR_DNI_INVALIDO = "El DNI no puede estar vacio.";
-
+    
+    //CONTROL DE ACCESO-MOLINETE (TS2-03)
+    public static final String PEDIR_DNI_MOLINETE = "DNI del socio para ingreso: ";
+    public static final String ACCESO_AUTORIZADO = "ACCESO AUTORIZADO, pase por el molinete.";
+    
+    public static String errorAccesoMolinete(MotivoAcceso motivo, String motivoSancion) {
+        return "ACCESO DENEGADO: " + motivoRechazoAcceso(motivo, motivoSancion);
+    }
+    //
     public static String socioRegistrado(Socio s) {
         return "Socio registrado correctamente: " + s.getApellido() + ", " + s.getNombre()
                 + " (DNI " + s.getDni() + ", " + tipoMembresia(s.getTipoMembresia()) + ").";
@@ -307,4 +318,5 @@ public final class Mensajes {
                         + ". Verifique que exista y que no este en uso.";
         }
     }
+    
 }
