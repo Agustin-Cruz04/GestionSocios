@@ -279,6 +279,8 @@ public class Menu {
             mostrar(Mensajes.ERROR_DNI_INVALIDO);
         } catch (ReservaDuplicadaException e) {
             mostrar(Mensajes.errorReservaDuplicada(e.getReserva()));
+        } catch (PersistenciaException e) {
+            mostrar(Mensajes.errorPersistencia(e));
         }
     }
 

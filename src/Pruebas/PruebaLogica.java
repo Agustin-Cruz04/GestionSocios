@@ -28,9 +28,11 @@ public class PruebaLogica {
         archivo.delete();
         File archivoEquipo = File.createTempFile("equipo_logica", ".dat");
         archivoEquipo.delete();
+        File archivoReservas = File.createTempFile("reservas_logica", ".dat");
+        archivoReservas.delete();
 
         try {
-            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
+            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoReservas.getPath()));
             comprobar("Primer arranque sin archivo: empieza con 0 socios", logica.totalSocios() == 0);
 
             Socio carlos = new SocioEstandar("30111222", "Carlos", "Gomez", "c@mail.com", "11-1111",
@@ -111,7 +113,7 @@ public class PruebaLogica {
                     lista.get(0) == carlos && lista.get(1) == valeria && lista.get(2) == lucas);
 
             System.out.println("\n--- Criterio 3: persistencia (se 'reinicia' el programa) ---");
-            Logica reiniciada = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
+            Logica reiniciada = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoReservas.getPath()));
             comprobar("Al iniciar Logica se cargan los 3 socios del archivo", reiniciada.totalSocios() == 3);
             try {
                 Socio recuperada = reiniciada.consultarPorDni("32333444");
@@ -132,7 +134,7 @@ public class PruebaLogica {
 
             System.out.println("\n--- Si falla el archivo, el alta se deshace ---");
             Logica sinDisco = new Logica(
-                    new AccesoDatos("carpeta_que_no_existe/Socios.txt", "carpeta_que_no_existe/Equipamiento.txt"));
+                    new AccesoDatos("carpeta_que_no_existe/Socios.txt", "carpeta_que_no_existe/Equipamiento.txt", "carpeta_que_no_existe/Reservas.txt"));
             try {
                 sinDisco.darDeAlta(new SocioEstandar("111", "A", "B", "e", "t", 1));
                 comprobar("Debio lanzar PersistenciaException", false);
@@ -147,6 +149,7 @@ public class PruebaLogica {
         } finally {
             archivo.delete();
             archivoEquipo.delete();
+            archivoReservas.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

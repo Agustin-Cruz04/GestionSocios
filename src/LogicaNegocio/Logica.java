@@ -33,6 +33,7 @@ public class Logica {
         this.persistencia = Objects.requireNonNull(persistencia);
         traerSociosDelArchivo();
         traerEquipamientoDelArchivo();
+        traerReservasDelArchivo();
     }
 
     public double valorBaseCuota() {
@@ -278,12 +279,14 @@ public class Logica {
     // RESERVAS (TS2-02)
 
     public void reservar(String dni, String actividad, String horario)
-            throws SocioNoEncontradoException, DniInvalidoException, ReservaDuplicadaException {
+            throws SocioNoEncontradoException, DniInvalidoException, ReservaDuplicadaException,
+            PersistenciaException {
         Socio socio = consultarPorDni(dni);
         Reserva nueva = new Reserva(socio.getDni(), actividad.trim(), horario.trim());
 
         Set<Reserva> reservas = reservasPorActividad.get(nueva.getActividad());
-        if (reservas == null) {
+        boolean actividadNueva = (reservas == null);
+        if (actividadNueva) {
             reservas = new HashSet<Reserva>();
             reservasPorActividad.put(nueva.getActividad(), reservas);
         }
@@ -291,6 +294,17 @@ public class Logica {
         // evitar set duplicado
         if (!reservas.add(nueva)) {
             throw new ReservaDuplicadaException(nueva);
+        }
+
+        try {
+            volcarReservasAlArchivo();
+        } catch (PersistenciaException e) {
+            // se deshace la reserva si no se pudo guardar
+            reservas.remove(nueva);
+            if (actividadNueva) {
+                reservasPorActividad.remove(nueva.getActividad());
+            }
+            throw e;
         }
     }
 
@@ -338,6 +352,14 @@ public class Logica {
 
         persistencia.grabarEquipamiento(new RegistroEquipamiento(
                 new HashMap<String, Equipamiento>(inventario), new ArrayList<Alquiler>(alquileres)));
+    }
+
+    private void traerReservasDelArchivo() throws PersistenciaException {
+        reservasPorActividad.putAll(persistencia.leerReservas());
+    }
+
+    private void volcarReservasAlArchivo() throws PersistenciaException {
+        persistencia.grabarReservas(reservasPorActividad);
     }
 
     private String limpiarDni(String dni) throws DniInvalidoException {

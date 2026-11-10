@@ -2,6 +2,7 @@ package Datos;
 
 import LogicaNegocio.Alquiler;
 import LogicaNegocio.Equipamiento;
+import LogicaNegocio.Reserva;
 import LogicaNegocio.RegistroEquipamiento;
 import LogicaNegocio.Socio;
 
@@ -17,23 +18,28 @@ import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class AccesoDatos {
 
     private static final String ARCHIVO_SOCIOS = "GestionSocios\\Socios.txt";
     private static final String ARCHIVO_EQUIPAMIENTO = "GestionSocios\\Equipamiento.txt";
+    private static final String ARCHIVO_RESERVAS = "GestionSocios\\Reservas.txt";
 
     private final String rutaSocios;
     private final String rutaEquipamiento;
+    private final String rutaReservas;
 
     public AccesoDatos() {
-        this(ARCHIVO_SOCIOS, ARCHIVO_EQUIPAMIENTO);
+        this(ARCHIVO_SOCIOS, ARCHIVO_EQUIPAMIENTO, ARCHIVO_RESERVAS);
     }
 
-    public AccesoDatos(String rutaSocios, String rutaEquipamiento) {
+    public AccesoDatos(String rutaSocios, String rutaEquipamiento, String rutaReservas) {
         this.rutaSocios = Objects.requireNonNull(rutaSocios);
         this.rutaEquipamiento = Objects.requireNonNull(rutaEquipamiento);
+        this.rutaReservas = Objects.requireNonNull(rutaReservas);
     }
 
     // Socios.txt
@@ -77,6 +83,32 @@ public class AccesoDatos {
             return (RegistroEquipamiento) contenido;
         } catch (ClassCastException e) {
             throw new PersistenciaException(MotivoFallo.FORMATO_INVALIDO, rutaEquipamiento, e);
+        }
+    }
+
+    // Reservas.txt
+
+    public void grabarReservas(Map<String, Set<Reserva>> reservas) throws PersistenciaException {
+        Objects.requireNonNull(reservas);
+        // Se graba una copia (mapa y conjuntos), no las estructuras de la Logica
+        Map<String, Set<Reserva>> copia = new HashMap<String, Set<Reserva>>();
+        for (Map.Entry<String, Set<Reserva>> entrada : reservas.entrySet()) {
+            copia.put(entrada.getKey(), new HashSet<Reserva>(entrada.getValue()));
+        }
+        escribirEnArchivo(rutaReservas, copia);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Set<Reserva>> leerReservas() throws PersistenciaException {
+        Object contenido = leerDeArchivo(rutaReservas);
+
+        if (contenido == null) {
+            return new HashMap<String, Set<Reserva>>(); // no hay archivo todavia
+        }
+        try {
+            return (Map<String, Set<Reserva>>) contenido;
+        } catch (ClassCastException e) {
+            throw new PersistenciaException(MotivoFallo.FORMATO_INVALIDO, rutaReservas, e);
         }
     }
 

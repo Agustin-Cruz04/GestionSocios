@@ -6,6 +6,7 @@ import Datos.PersistenciaException;
 import LogicaNegocio.Alquiler;
 import LogicaNegocio.Equipamiento;
 import LogicaNegocio.RegistroEquipamiento;
+import LogicaNegocio.Reserva;
 import LogicaNegocio.Socio;
 import LogicaNegocio.TipoEquipamiento;
 import LogicaNegocio.TipoMembresia;
@@ -20,7 +21,9 @@ import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class PruebaAccesoDatos {
 
@@ -33,7 +36,9 @@ public class PruebaAccesoDatos {
         archivo.delete(); // se empieza SIN archivo
         File archivoEquipo = File.createTempFile("equipamiento_prueba", ".dat");
         archivoEquipo.delete();
-        AccesoDatos datos = new AccesoDatos(archivo.getPath(), archivoEquipo.getPath());
+        File archivoReservas = File.createTempFile("reservas_prueba", ".dat");
+        archivoReservas.delete();
+        AccesoDatos datos = new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoReservas.getPath());
 
         try {
             System.out.println("\n--- 1. Archivo inexistente ---");
@@ -102,12 +107,12 @@ public class PruebaAccesoDatos {
             probarLecturaFallida(datos, MotivoFallo.FORMATO_INVALIDO, "Contenido de otro tipo");
 
             System.out.println("\n--- 7. La ruta es una carpeta (no se puede leer como archivo) ---");
-            AccesoDatos conCarpeta = new AccesoDatos(System.getProperty("java.io.tmpdir"), archivoEquipo.getPath());
+            AccesoDatos conCarpeta = new AccesoDatos(System.getProperty("java.io.tmpdir"), archivoEquipo.getPath(), archivoReservas.getPath());
             probarLecturaFallida(conCarpeta, MotivoFallo.LECTURA, "Ruta que es una carpeta");
 
             System.out.println("\n--- 8. Error al escribir (carpeta inexistente) ---");
             AccesoDatos imposible = new AccesoDatos("carpeta_que_no_existe/Socios.txt",
-                    "carpeta_que_no_existe/Equipamiento.txt");
+                    "carpeta_que_no_existe/Equipamiento.txt", "carpeta_que_no_existe/Reservas.txt");
             try {
                 imposible.grabarSocios(new HashMap<String, Socio>());
                 comprobar("Debio fallar al escribir en una carpeta inexistente", false);
@@ -173,9 +178,109 @@ public class PruebaAccesoDatos {
                         e.getMotivo() == MotivoFallo.FORMATO_INVALIDO);
             }
 
+            System.out.println("\n--- 13. Reservas.txt: archivo inexistente ---");
+            try {
+                Map<String, Set<Reserva>> vacias = datos.leerReservas();
+                comprobar("Sin archivo devuelve un mapa de reservas vacio", vacias != null && vacias.isEmpty());
+            } catch (PersistenciaException e) {
+                comprobar("Sin archivo de reservas NO debe lanzar excepcion", false);
+            }
+
+            System.out.println("\n--- 14. Reservas.txt: grabar y recuperar ---");
+            try {
+                Map<String, Set<Reserva>> reservas = new HashMap<String, Set<Reserva>>();
+                Set<Reserva> natacion = new HashSet<Reserva>();
+                natacion.add(new Reserva("30111222", "Natacion", "Lunes 18:00"));
+                natacion.add(new Reserva("32333444", "Natacion", "Lunes 18:00"));
+                Set<Reserva> spinning = new HashSet<Reserva>();
+                spinning.add(new Reserva("30111222", "Spinning", "Martes 19:00"));
+                reservas.put("Natacion", natacion);
+                reservas.put("Spinning", spinning);
+                datos.grabarReservas(reservas);
+                comprobar("El archivo Reservas se creo en disco", archivoReservas.exists());
+
+                Map<String, Set<Reserva>> leidas = datos.leerReservas();
+                comprobar("Se recuperaron las 2 actividades", leidas.size() == 2);
+                comprobar("Natacion conserva sus 2 reservas", leidas.get("Natacion").size() == 2);
+                comprobar("Spinning conserva su reserva", leidas.get("Spinning").size() == 1);
+                comprobar("Las reservas leidas son iguales (equals) a las originales",
+                        leidas.get("Natacion").contains(new Reserva("32333444", "Natacion", "Lunes 18:00")));
+                comprobar("Son objetos leidos del archivo, no los mismos de memoria", leidas.get("Natacion") != natacion);
+
+                // se graba una copia: cambiar lo de memoria despues no altera lo grabado
+                natacion.clear();
+                comprobar("Modificar el mapa original no altera lo ya grabado",
+                        datos.leerReservas().get("Natacion").size() == 2);
+            } catch (PersistenciaException e) {
+                comprobar("Grabar y leer reservas no debe fallar (archivo " + e.getArchivo() + ")", false);
+            }
+
+            System.out.println("\n--- 15. Reservas.txt danado o de otro tipo ---");
+            try (FileOutputStream basura = new FileOutputStream(archivoReservas)) {
+                basura.write("basura".getBytes());
+            }
+            try {
+                datos.leerReservas();
+                comprobar("Debio lanzar PersistenciaException", false);
+            } catch (PersistenciaException e) {
+                comprobar("Reservas danado -> PersistenciaException de formato",
+                        e.getMotivo() == MotivoFallo.FORMATO_INVALIDO);
+                comprobar("Informa el archivo de reservas", e.getArchivo().equals(archivoReservas.getPath()));
+            }
+            try (ObjectOutputStream otro = new ObjectOutputStream(new FileOutputStream(archivoReservas))) {
+                otro.writeObject("hola");
+            }
+            try {
+                datos.leerReservas();
+                comprobar("Debio lanzar PersistenciaException (contenido de otro tipo)", false);
+            } catch (PersistenciaException e) {
+                comprobar("Reservas con otro contenido -> PersistenciaException de formato",
+                        e.getMotivo() == MotivoFallo.FORMATO_INVALIDO);
+            }
+
+            System.out.println("\n--- 16. Reservas.txt: error al escribir y mapa null ---");
+            try {
+                imposible.grabarReservas(new HashMap<String, Set<Reserva>>());
+                comprobar("Debio fallar al escribir en una carpeta inexistente", false);
+            } catch (PersistenciaException e) {
+                comprobar("Lanza PersistenciaException de escritura", e.getMotivo() == MotivoFallo.ESCRITURA);
+                comprobar("Informa el nombre del archivo",
+                        e.getArchivo().equals("carpeta_que_no_existe/Reservas.txt"));
+            }
+            try {
+                datos.grabarReservas(null);
+                comprobar("Debio rechazar un mapa null", false);
+            } catch (NullPointerException e) {
+                comprobar("Mapa de reservas null se rechaza (NullPointerException)", true);
+            } catch (PersistenciaException e) {
+                comprobar("Mapa null no debe llegar a PersistenciaException", false);
+            }
+
+            System.out.println("\n--- 17. Los tres archivos son independientes ---");
+            try {
+                Map<String, Socio> unSocio = new HashMap<String, Socio>();
+                unSocio.put(lucas.getDni(), lucas);
+                datos.grabarSocios(unSocio);
+                Map<String, Set<Reserva>> unaReserva = new HashMap<String, Set<Reserva>>();
+                Set<Reserva> yoga = new HashSet<Reserva>();
+                yoga.add(new Reserva("35555666", "Yoga", "Jueves 10:00"));
+                unaReserva.put("Yoga", yoga);
+                datos.grabarReservas(unaReserva);
+                datos.grabarEquipamiento(new RegistroEquipamiento(new HashMap<String, Equipamiento>(),
+                        new ArrayList<Alquiler>()));
+                comprobar("Socios sigue intacto tras grabar los otros archivos", datos.leerSocios().size() == 1);
+                comprobar("Reservas sigue intacto tras grabar los otros archivos",
+                        datos.leerReservas().containsKey("Yoga"));
+                comprobar("Son tres archivos distintos",
+                        archivo.exists() && archivoEquipo.exists() && archivoReservas.exists());
+            } catch (PersistenciaException e) {
+                comprobar("Grabar los tres archivos no debe fallar (archivo " + e.getArchivo() + ")", false);
+            }
+
         } finally {
             archivo.delete(); // limpia el archivo temporal
             archivoEquipo.delete();
+            archivoReservas.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");
