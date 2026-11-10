@@ -78,7 +78,7 @@ public final class Mensajes {
 
     public static final String TIPO_INVALIDO = "Tipo de socio invalido. Se cancelo el registro.";
     public static final String SIN_SOCIOS = "Todavia no hay socios registrados.";
-    public static final String ENCABEZADO_LISTADO = "--- Socios registrados (ordenados por DNI) ---";
+    public static final String ENCABEZADO_LISTADO = "Socios ordenados por Dni";
     public static final String ERROR_DNI_INVALIDO = "El DNI no puede estar vacio.";
 
     public static final String PEDIR_DNI_MOLINETE = "DNI del socio para ingreso: ";
@@ -163,7 +163,7 @@ public final class Mensajes {
     public static final String PEDIR_DNI_SOCIO = "DNI del socio: ";
     public static final String PEDIR_CODIGO_ALQUILER = "Codigo del equipamiento: ";
     public static final String PEDIR_CODIGO_DEVOLUCION = "Codigo del equipamiento a devolver: ";
-    public static final String PEDIR_FECHA_DEVOLUCION = "Fecha de devolucion (dd/MM/yyyy, Enter = hoy): ";
+    public static final String PEDIR_FECHA_DEVOLUCION = "Fecha de devolucion (dd/MM/yyyy): ";
 
     public static final String SIN_EQUIPAMIENTO = "Todavia no hay equipamiento registrado.";
     public static final String ENCABEZADO_EQUIPAMIENTO = "--- Equipamiento (ordenado por codigo) ---";
@@ -280,8 +280,8 @@ public final class Mensajes {
 
     // Rreservas
 
-    public static final String PEDIR_ACTIVIDAD = "Actividad (ej. Natacion): ";
-    public static final String PEDIR_HORARIO = "Horario (ej. Lunes 18:00): ";
+    public static final String PEDIR_ACTIVIDAD = "Actividad (ej Natacion): ";
+    public static final String PEDIR_HORARIO = "Horario (ej Lunes 18:00): ";
     public static final String ENCABEZADO_RESERVAS = "--- Reservas de la actividad ---";
 
     public static String reservaRegistrada(Reserva r) {
@@ -321,10 +321,10 @@ public final class Mensajes {
 
     // Validaciones de datos
 
-    public static final String ERROR_DNI_FORMATO = "DNI invalido. Debe tener 7 u 8 numeros, sin puntos ni letras (por ejemplo 30111222).";
-    public static final String ERROR_NOMBRE_FORMATO = "Dato invalido. Use solo letras y espacios (minimo 2 caracteres).";
-    public static final String ERROR_EMAIL_FORMATO = "Email invalido. Debe ser como usuario@dominio.com (por ejemplo juan@gmail.com).";
-    public static final String ERROR_TELEFONO_FORMATO = "Telefono invalido. Use entre 6 y 15 numeros (se permiten espacios, + y -).";
+    public static final String ERROR_DNI_FORMATO = "DNI invalido. Debe tener 7 o 8 numeros, sin puntos ni letras.";
+    public static final String ERROR_NOMBRE_FORMATO = "Dato invalido. Use solo letras y espacios.";
+    public static final String ERROR_EMAIL_FORMATO = "Email invalido.";
+    public static final String ERROR_TELEFONO_FORMATO = "Telefono invalido. Use solo numeros, espacios, + y -.";
     public static final String ERROR_TIPO_SOCIO = "Tipo invalido. Elija 1, 2 o 3.";
 
     // Reportes y busquedas
@@ -335,8 +335,8 @@ public final class Mensajes {
                 + "1. Socios ordenados por apellido y nombre" + n
                 + "2. Socios ordenados por monto de cuota" + n
                 + "3. Socios morosos o sancionados" + n
-                + "4. Buscar socios por apellido (busqueda binaria)" + n
-                + "5. Buscar socios por monto de cuota (busqueda binaria)" + n
+                + "4. Buscar socios por apellido " + n
+                + "5. Buscar socios por monto de cuota " + n
                 + "6. Ocupacion de actividades" + n
                 + "7. Recaudacion mensual" + n
                 + "0. Volver";
@@ -352,8 +352,8 @@ public final class Mensajes {
     public static final String ENCABEZADO_OCUPACION = "--- Ocupacion de actividades (mas reservas primero) ---";
     public static final String SIN_FACTURAS = "Todavia no hay facturas emitidas.";
     public static final String ENCABEZADO_RECAUDACION = "--- Recaudacion por mes ---";
-    public static final String PEDIR_ANIO = "Anio (por ejemplo 2026): ";
-    public static final String PEDIR_MES = "Mes (1 a 12): ";
+    public static final String PEDIR_ANIO = "Año : ";
+    public static final String PEDIR_MES = "Mes : ";
     public static final String MES_INVALIDO = "El mes tiene que estar entre 1 y 12.";
 
     public static String lineaMoroso(Socio s) {
