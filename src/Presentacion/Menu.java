@@ -11,6 +11,7 @@ import LogicaNegocio.EquipamientoNoDisponibleException;
 import LogicaNegocio.EquipamientoNoEncontradoException;
 import LogicaNegocio.FechaInvalidaException;
 import LogicaNegocio.Logica;
+import LogicaNegocio.OcupacionActividad;
 import LogicaNegocio.Reserva;
 import LogicaNegocio.ReservaDuplicadaException;
 import LogicaNegocio.Socio;
@@ -21,11 +22,13 @@ import LogicaNegocio.SocioEstandar;
 import LogicaNegocio.SocioNoEncontradoException;
 import LogicaNegocio.SocioVIP;
 import LogicaNegocio.TipoEquipamiento;
+import LogicaNegocio.Validaciones;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
@@ -78,6 +81,14 @@ public class Menu {
                     case 10:
                         verReservasDeActividad();
                         break;
+                    // CONTROL DE ACCESO-MOLINETE (TS2-03)
+                    case 11:
+                        molinete();
+                        break;
+                    // REPORTES (TS3-02)
+                    case 12:
+                        menuReportes();
+                        break;
                     case 0:
                         mostrar(Mensajes.DESPEDIDA);
                         break;
@@ -90,15 +101,20 @@ public class Menu {
         }
     }
 
-    // SOCIOS
+    // Socios
 
     private void registrarSocio() {
-        String dni = pedirTexto(Mensajes.PEDIR_DNI);
-        String nombre = pedirTexto(Mensajes.PEDIR_NOMBRE);
-        String apellido = pedirTexto(Mensajes.PEDIR_APELLIDO);
-        String email = pedirTexto(Mensajes.PEDIR_EMAIL);
-        String telefono = pedirTexto(Mensajes.PEDIR_TELEFONO);
-        int tipo = pedirEntero(Mensajes.PEDIR_TIPO);
+
+        String dni = pedirDniValido();
+        if (logica.yaEstaRegistrado(dni)) {
+            mostrar(Mensajes.errorDniDuplicado(dni));
+            return;
+        }
+        String nombre = pedirNombreValido(Mensajes.PEDIR_NOMBRE);
+        String apellido = pedirNombreValido(Mensajes.PEDIR_APELLIDO);
+        String email = pedirEmailValido();
+        String telefono = pedirTelefonoValido();
+        int tipo = pedirTipoSocio();
 
         double base = logica.valorBaseCuota();
 
@@ -156,7 +172,173 @@ public class Menu {
         }
     }
 
-    // Equipamiento y alquileres
+    private void molinete() {
+        String dni = pedirTexto(Mensajes.PEDIR_DNI_MOLINETE);
+        try {
+            logica.registrarAccesoMolinete(dni);
+            mostrar(Mensajes.ACCESO_AUTORIZADO);
+        } catch (SocioNoEncontradoException e) {
+            mostrar(Mensajes.errorSocioNoEncontrado(e.getDni()));
+        } catch (DniInvalidoException e) {
+            mostrar(Mensajes.ERROR_DNI_INVALIDO);
+        } catch (AccesoDenegadoException e) {
+            mostrar(Mensajes.errorAccesoMolinete(e.getMotivo(), e.getMotivoSancion()));
+        }
+    }
+
+    private String pedirDniValido() {
+        while (true) {
+            String dni = pedirTexto(Mensajes.PEDIR_DNI);
+            if (Validaciones.dniValido(dni)) {
+                return dni;
+            }
+            mostrar(Mensajes.ERROR_DNI_FORMATO);
+        }
+    }
+
+    private String pedirNombreValido(String pregunta) {
+        while (true) {
+            String texto = pedirTexto(pregunta);
+            if (Validaciones.nombreValido(texto)) {
+                return texto;
+            }
+            mostrar(Mensajes.ERROR_NOMBRE_FORMATO);
+        }
+    }
+
+    private String pedirEmailValido() {
+        while (true) {
+            String email = pedirTexto(Mensajes.PEDIR_EMAIL);
+            if (Validaciones.emailValido(email)) {
+                return email;
+            }
+            mostrar(Mensajes.ERROR_EMAIL_FORMATO);
+        }
+    }
+
+    private String pedirTelefonoValido() {
+        while (true) {
+            String telefono = pedirTexto(Mensajes.PEDIR_TELEFONO);
+            if (Validaciones.telefonoValido(telefono)) {
+                return telefono;
+            }
+            mostrar(Mensajes.ERROR_TELEFONO_FORMATO);
+        }
+    }
+
+    private int pedirTipoSocio() {
+        while (true) {
+            int tipo = pedirEntero(Mensajes.PEDIR_TIPO);
+            if (tipo >= 1 && tipo <= 3) {
+                return tipo;
+            }
+            mostrar(Mensajes.ERROR_TIPO_SOCIO);
+        }
+    }
+
+    private void menuReportes() {
+        int opcion = -1;
+        do {
+            mostrar(Mensajes.menuReportes());
+            opcion = pedirEntero(Mensajes.PEDIR_OPCION);
+            switch (opcion) {
+                case 1:
+                    mostrarReporteSocios(Mensajes.ENCABEZADO_REPORTE_APELLIDO,
+                            logica.reporteSociosPorApellidoNombre(), false);
+                    break;
+                case 2:
+                    mostrarReporteSocios(Mensajes.ENCABEZADO_REPORTE_CUOTA, logica.reporteSociosPorCuota(), false);
+                    break;
+                case 3:
+                    List<Socio> morosos = logica.reporteMorososYSancionados();
+                    if (morosos.isEmpty()) {
+                        mostrar(Mensajes.SIN_MOROSOS);
+                    } else {
+                        mostrarReporteSocios(Mensajes.ENCABEZADO_REPORTE_MOROSOS, morosos, true);
+                    }
+                    break;
+                case 4:
+                    buscarPorApellido();
+                    break;
+                case 5:
+                    buscarPorCuota();
+                    break;
+                case 6:
+                    verOcupacionActividades();
+                    break;
+                case 7:
+                    verRecaudacion();
+                    break;
+                case 0:
+                    break;
+                default:
+                    mostrar(Mensajes.OPCION_INVALIDA);
+            }
+        } while (opcion != 0);
+    }
+
+    private void mostrarReporteSocios(String encabezado, List<Socio> socios, boolean conEstado) {
+        if (socios.isEmpty()) {
+            mostrar(Mensajes.SIN_SOCIOS);
+            return;
+        }
+        mostrar(encabezado);
+        for (Socio s : socios) {
+            mostrar(conEstado ? Mensajes.lineaMoroso(s) : Mensajes.lineaListado(s));
+        }
+    }
+
+    private void buscarPorApellido() {
+        String apellido = pedirTexto(Mensajes.PEDIR_APELLIDO_BUSQUEDA);
+        List<Socio> encontrados = logica.buscarPorApellido(apellido);
+        if (encontrados.isEmpty()) {
+            mostrar(Mensajes.busquedaApellidoSinResultados(apellido));
+            return;
+        }
+        mostrar(Mensajes.resultadoBusquedaApellido(apellido, encontrados.size()));
+        for (Socio s : encontrados) {
+            mostrar(Mensajes.lineaListado(s));
+        }
+    }
+
+    private void buscarPorCuota() {
+        double monto = pedirDecimal(Mensajes.PEDIR_CUOTA_BUSQUEDA);
+        List<Socio> encontrados = logica.buscarPorCuota(monto);
+        if (encontrados.isEmpty()) {
+            mostrar(Mensajes.busquedaCuotaSinResultados(monto));
+            return;
+        }
+        mostrar(Mensajes.resultadoBusquedaCuota(monto, encontrados.size()));
+        for (Socio s : encontrados) {
+            mostrar(Mensajes.lineaListado(s));
+        }
+    }
+
+    private void verOcupacionActividades() {
+        List<OcupacionActividad> lista = logica.reporteOcupacionActividades();
+        if (lista.isEmpty()) {
+            mostrar(Mensajes.SIN_ACTIVIDADES);
+            return;
+        }
+        mostrar(Mensajes.ENCABEZADO_OCUPACION);
+        for (OcupacionActividad o : lista) {
+            mostrar(Mensajes.lineaOcupacion(o));
+        }
+    }
+
+    private void verRecaudacion() {
+        Map<String, Double> porPeriodo = logica.recaudacionPorPeriodo();
+        if (porPeriodo.isEmpty()) {
+            mostrar(Mensajes.SIN_FACTURAS);
+            return;
+        }
+        mostrar(Mensajes.ENCABEZADO_RECAUDACION);
+        for (Map.Entry<String, Double> e : porPeriodo.entrySet()) {
+            mostrar(Mensajes.lineaRecaudacion(e.getKey(), e.getValue()));
+        }
+    }
+
+    // Equipamineto y alquileres
 
     private void registrarEquipamiento() {
         String codigo = pedirTexto(Mensajes.PEDIR_CODIGO_EQUIPO);
@@ -246,7 +428,7 @@ public class Menu {
         }
     }
 
-    // RESERVAS (TS2-02)
+    // Reservas
 
     private void reservarActividad() {
         String dni = pedirTexto(Mensajes.PEDIR_DNI_SOCIO);
@@ -261,6 +443,8 @@ public class Menu {
             mostrar(Mensajes.ERROR_DNI_INVALIDO);
         } catch (ReservaDuplicadaException e) {
             mostrar(Mensajes.errorReservaDuplicada(e.getReserva()));
+        } catch (PersistenciaException e) {
+            mostrar(Mensajes.errorPersistencia(e));
         }
     }
 

@@ -1,6 +1,7 @@
 package Pruebas;
 
 import Datos.AccesoDatos;
+import Datos.MotivoFallo;
 import Datos.PersistenciaException;
 import LogicaNegocio.DniInvalidoException;
 import LogicaNegocio.Logica;
@@ -25,9 +26,14 @@ public class PruebaReservas {
         archivo.delete();
         File archivoEquipo = File.createTempFile("equipo_reservas", ".dat");
         archivoEquipo.delete();
+        File archivoReservas = File.createTempFile("reservas_reservas", ".dat");
+        archivoReservas.delete();
+        File archivoFacturas = File.createTempFile("facturas_prueba", ".dat");
+        archivoFacturas.delete();
 
         try {
-            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath()));
+            Logica logica = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(),
+                    archivoReservas.getPath(), archivoFacturas.getPath()));
             Socio carlos = new SocioEstandar("30111222", "Carlos", "Gomez", "c@mail.com", "11-1111",
                     logica.valorBaseCuota());
             Socio valeria = new SocioEstandar("32333444", "Valeria", "Lopez", "v@mail.com", "11-2222",
@@ -101,9 +107,56 @@ public class PruebaReservas {
             }
             comprobar("Ninguna reserva invalida se guardo", logica.totalReservas() == 4);
 
+            System.out.println("\n--- Persistencia: las reservas sobreviven a un reinicio ---");
+            comprobar("Se creo Reservas.txt", archivoReservas.exists());
+            Logica reiniciada = new Logica(
+                    new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoReservas.getPath(),
+                            archivoFacturas.getPath()));
+            comprobar("Tras reiniciar hay 4 reservas", reiniciada.totalReservas() == 4);
+            comprobar("Natacion sigue con 3 reservas", reiniciada.reservasDeActividad("Natacion").size() == 3);
+            comprobar("La reserva de Carlos en Spinning sigue ahi",
+                    reiniciada.reservasDeActividad("Spinning").contains(
+                            new Reserva("30111222", "Spinning", "Lunes 18:00")));
+            try {
+                reiniciada.reservar("30111222", "Natacion", "Lunes 18:00");
+                comprobar("Debio rechazar el duplicado de una reserva ya persistida", false);
+            } catch (ReservaDuplicadaException e) {
+                comprobar("El duplicado se detecta tambien despues de reiniciar", true);
+            } catch (SocioNoEncontradoException | DniInvalidoException e) {
+                comprobar("El socio existe y el DNI es valido", false);
+            }
+            try {
+                reiniciada.reservar("32333444", "Spinning", "Lunes 18:00");
+            } catch (SocioNoEncontradoException | DniInvalidoException | ReservaDuplicadaException e) {
+                comprobar("Una reserva nueva despues de reiniciar no debe fallar", false);
+            }
+            Logica otraVez = new Logica(
+                    new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(), archivoReservas.getPath(),
+                            archivoFacturas.getPath()));
+            comprobar("La reserva nueva tambien se guardo (5 en total)", otraVez.totalReservas() == 5);
+
+            System.out.println("\n--- Persistencia: si falla el archivo, la reserva se deshace ---");
+            Logica sinDisco = new Logica(new AccesoDatos(archivo.getPath(), archivoEquipo.getPath(),
+                    "carpeta_que_no_existe/Reservas.txt", "carpeta_que_no_existe/Facturas.txt"));
+            int antes = sinDisco.totalReservas();
+            try {
+                sinDisco.reservar("30111222", "Tenis", "Viernes 09:00");
+                comprobar("Debio lanzar PersistenciaException", false);
+            } catch (PersistenciaException e) {
+                comprobar("Falla de archivo -> PersistenciaException de escritura",
+                        e.getMotivo() == MotivoFallo.ESCRITURA);
+            } catch (SocioNoEncontradoException | DniInvalidoException | ReservaDuplicadaException e) {
+                comprobar("El error debe ser de persistencia", false);
+            }
+            comprobar("La reserva no quedo en memoria", sinDisco.totalReservas() == antes);
+            comprobar("Una actividad nueva que no se pudo guardar no queda registrada",
+                    sinDisco.reservasDeActividad("Tenis").isEmpty());
+
         } finally {
             archivo.delete();
             archivoEquipo.delete();
+            archivoReservas.delete();
+            archivoFacturas.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

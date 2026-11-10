@@ -6,6 +6,7 @@ import LogicaNegocio.Alquiler;
 import LogicaNegocio.Equipamiento;
 import LogicaNegocio.EstadoAlquiler;
 import LogicaNegocio.MotivoAcceso;
+import LogicaNegocio.OcupacionActividad;
 import LogicaNegocio.Reserva;
 import LogicaNegocio.Socio;
 import LogicaNegocio.TipoEquipamiento;
@@ -30,7 +31,6 @@ public final class Mensajes {
     private static String dinero(double monto) {
         return "$" + String.format("%.2f", monto);
     }
-    // GENERALES
 
     public static final String DESPEDIDA = "Hasta luego.";
     public static final String PEDIR_OPCION = "Opcion: ";
@@ -57,6 +57,11 @@ public final class Mensajes {
                 + "--- Actividades ---" + n
                 + "9. Reservar actividad" + n
                 + "10. Ver reservas de una actividad" + n
+                + "--- Control de Acceso ---" + n
+
+                + "11. Molinete (Check-in)" + n
+                + "--- Reportes ---" + n
+                + "12. Reportes y busquedas" + n
                 + "0. Salir";
     }
 
@@ -76,6 +81,14 @@ public final class Mensajes {
     public static final String ENCABEZADO_LISTADO = "--- Socios registrados (ordenados por DNI) ---";
     public static final String ERROR_DNI_INVALIDO = "El DNI no puede estar vacio.";
 
+    public static final String PEDIR_DNI_MOLINETE = "DNI del socio para ingreso: ";
+    public static final String ACCESO_AUTORIZADO = "ACCESO AUTORIZADO, pase por el molinete.";
+
+    public static String errorAccesoMolinete(MotivoAcceso motivo, String motivoSancion) {
+        return "ACCESO DENEGADO: " + motivoRechazoAcceso(motivo, motivoSancion);
+    }
+
+    //
     public static String socioRegistrado(Socio s) {
         return "Socio registrado correctamente: " + s.getApellido() + ", " + s.getNombre()
                 + " (DNI " + s.getDni() + ", " + tipoMembresia(s.getTipoMembresia()) + ").";
@@ -139,7 +152,7 @@ public final class Mensajes {
         return "No existe ningun socio con el DNI " + dni + ".";
     }
 
-    // EQUIPAMIENTO Y ALQUILERES
+    // Equipaminento y alquileres
 
     public static final String PEDIR_CODIGO_EQUIPO = "Codigo del equipamiento (ej. RQ-01): ";
     public static final String PEDIR_NOMBRE_EQUIPO = "Nombre (ej. Raqueta de tenis): ";
@@ -244,7 +257,6 @@ public final class Mensajes {
         return "Alquiler rechazado: " + motivoRechazoAcceso(motivo, motivoSancion);
     }
 
-    // Traduce Socio.getMotivoAcceso() a texto (la sancion lleva su propio motivo)
     public static String motivoRechazoAcceso(MotivoAcceso motivo, String motivoSancion) {
         switch (motivo) {
             case SOCIO_DE_BAJA:
@@ -266,7 +278,7 @@ public final class Mensajes {
         return "El equipamiento " + codigo + " no tiene ningun alquiler activo para devolver.";
     }
 
-    // RESERVAS
+    // Rreservas
 
     public static final String PEDIR_ACTIVIDAD = "Actividad (ej. Natacion): ";
     public static final String PEDIR_HORARIO = "Horario (ej. Lunes 18:00): ";
@@ -289,7 +301,6 @@ public final class Mensajes {
         return r.getActividad() + " - " + r.getHorario() + " (DNI " + r.getDniSocio() + ")";
     }
 
-    // ERRORES DE ARCHIVOS
     public static String errorArchivoNoEncontrado(String archivo) {
         return "No se pudo leer el archivo " + archivo + ". Verifique que exista y que no este en uso.";
     }
@@ -306,5 +317,76 @@ public final class Mensajes {
                 return "No se pudo leer el archivo " + e.getArchivo()
                         + ". Verifique que exista y que no este en uso.";
         }
+    }
+
+    // Validaciones de datos
+
+    public static final String ERROR_DNI_FORMATO = "DNI invalido. Debe tener 7 u 8 numeros, sin puntos ni letras (por ejemplo 30111222).";
+    public static final String ERROR_NOMBRE_FORMATO = "Dato invalido. Use solo letras y espacios (minimo 2 caracteres).";
+    public static final String ERROR_EMAIL_FORMATO = "Email invalido. Debe ser como usuario@dominio.com (por ejemplo juan@gmail.com).";
+    public static final String ERROR_TELEFONO_FORMATO = "Telefono invalido. Use entre 6 y 15 numeros (se permiten espacios, + y -).";
+    public static final String ERROR_TIPO_SOCIO = "Tipo invalido. Elija 1, 2 o 3.";
+
+    // Reportes y busquedas
+
+    public static String menuReportes() {
+        String n = System.lineSeparator();
+        return n + "=== REPORTES Y BUSQUEDAS ===" + n
+                + "1. Socios ordenados por apellido y nombre" + n
+                + "2. Socios ordenados por monto de cuota" + n
+                + "3. Socios morosos o sancionados" + n
+                + "4. Buscar socios por apellido (busqueda binaria)" + n
+                + "5. Buscar socios por monto de cuota (busqueda binaria)" + n
+                + "6. Ocupacion de actividades" + n
+                + "7. Recaudacion mensual" + n
+                + "0. Volver";
+    }
+
+    public static final String ENCABEZADO_REPORTE_APELLIDO = "--- Socios ordenados por apellido y nombre ---";
+    public static final String ENCABEZADO_REPORTE_CUOTA = "--- Socios ordenados por monto de cuota (menor a mayor) ---";
+    public static final String ENCABEZADO_REPORTE_MOROSOS = "--- Socios morosos o sancionados ---";
+    public static final String SIN_MOROSOS = "No hay socios morosos ni sancionados.";
+    public static final String PEDIR_APELLIDO_BUSQUEDA = "Apellido a buscar: ";
+    public static final String PEDIR_CUOTA_BUSQUEDA = "Monto de cuota a buscar: ";
+    public static final String SIN_ACTIVIDADES = "Todavia no hay reservas de actividades.";
+    public static final String ENCABEZADO_OCUPACION = "--- Ocupacion de actividades (mas reservas primero) ---";
+    public static final String SIN_FACTURAS = "Todavia no hay facturas emitidas.";
+    public static final String ENCABEZADO_RECAUDACION = "--- Recaudacion por mes ---";
+    public static final String PEDIR_ANIO = "Anio (por ejemplo 2026): ";
+    public static final String PEDIR_MES = "Mes (1 a 12): ";
+    public static final String MES_INVALIDO = "El mes tiene que estar entre 1 y 12.";
+
+    public static String lineaMoroso(Socio s) {
+        String mora = s.isCuotasAlDia() ? "cuotas al dia" : "CUOTAS VENCIDAS";
+        String sancion = s.isSancionado() ? "sancion: " + s.getMotivoSancion() : "sin sancion";
+        return lineaListado(s) + " | " + mora + " | " + sancion;
+    }
+
+    public static String resultadoBusquedaApellido(String apellido, int cantidad) {
+        return "Se encontraron " + cantidad + " socio(s) con el apellido \"" + apellido + "\":";
+    }
+
+    public static String busquedaApellidoSinResultados(String apellido) {
+        return "No existe ningun socio con el apellido \"" + apellido + "\".";
+    }
+
+    public static String resultadoBusquedaCuota(double monto, int cantidad) {
+        return "Se encontraron " + cantidad + " socio(s) con cuota de " + dinero(monto) + ":";
+    }
+
+    public static String busquedaCuotaSinResultados(double monto) {
+        return "No existe ningun socio con cuota de " + dinero(monto) + ".";
+    }
+
+    public static String lineaOcupacion(OcupacionActividad o) {
+        return o.getActividad() + ": " + o.getReservas() + " reserva(s)";
+    }
+
+    public static String lineaRecaudacion(String periodo, double total) {
+        return periodo + "  " + dinero(total);
+    }
+
+    public static String recaudacionDelPeriodo(int anio, int mes, double total) {
+        return "Recaudacion de " + String.format("%02d", mes) + "/" + anio + ": " + dinero(total);
     }
 }

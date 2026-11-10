@@ -5,8 +5,6 @@ import java.util.Objects;
 
 public class Equipamiento implements Serializable, Comparable<Equipamiento> {
 
-    // 2L: el campo tipo cambio de String a TipoEquipamiento (los archivos viejos ya
-    // no sirven)
     private static final long serialVersionUID = 2L;
 
     private final String codigo;

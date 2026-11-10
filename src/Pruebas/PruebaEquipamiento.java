@@ -37,11 +37,16 @@ public class PruebaEquipamiento {
         archivoSocios.delete();
         File archivoEquipo = File.createTempFile("equipo_equipo", ".dat");
         archivoEquipo.delete();
+        File archivoReservas = File.createTempFile("reservas_equipo", ".dat");
+        archivoReservas.delete();
+        File archivoFacturas = File.createTempFile("facturas_prueba", ".dat");
+        archivoFacturas.delete();
 
         LocalDate hoy = LocalDate.of(2026, 10, 28);
 
         try {
-            AccesoDatos datos = new AccesoDatos(archivoSocios.getPath(), archivoEquipo.getPath());
+            AccesoDatos datos = new AccesoDatos(archivoSocios.getPath(), archivoEquipo.getPath(),
+                    archivoReservas.getPath(), archivoFacturas.getPath());
             Logica logica = new Logica(datos);
 
             Socio carlos = new SocioEstandar("30111222", "Carlos", "Gomez", "c@mail.com", "11-1111", 10000);
@@ -170,7 +175,8 @@ public class PruebaEquipamiento {
 
             System.out.println("\n--- 8. Persistencia: se 'reinicia' el programa ---");
             logica.alquilar("30111222", "PL-03", hoy.plusDays(6)); // queda un alquiler activo
-            Logica reiniciada = new Logica(new AccesoDatos(archivoSocios.getPath(), archivoEquipo.getPath()));
+            Logica reiniciada = new Logica(new AccesoDatos(archivoSocios.getPath(), archivoEquipo.getPath(),
+                    archivoReservas.getPath(), archivoFacturas.getPath()));
             comprobar("Se recuperaron los 3 equipamientos", reiniciada.totalEquipamiento() == 3);
             comprobar("Se recuperaron los 4 alquileres", reiniciada.totalAlquileres() == 4);
             List<Alquiler> activos = reiniciada.alquileresActivos();
@@ -191,7 +197,8 @@ public class PruebaEquipamiento {
 
             System.out.println("\n--- 9. Si falla el archivo, el alta se deshace ---");
             Logica sinDisco = new Logica(
-                    new AccesoDatos(archivoSocios.getPath(), "carpeta_que_no_existe/Equipamiento.txt"));
+                    new AccesoDatos(archivoSocios.getPath(), "carpeta_que_no_existe/Equipamiento.txt",
+                            archivoReservas.getPath(), archivoFacturas.getPath()));
             try {
                 sinDisco.registrarEquipamiento(new Equipamiento("ZZ-01", "Prueba", TipoEquipamiento.OTRO, 1, 1));
                 comprobar("Debio lanzar PersistenciaException", false);
@@ -218,6 +225,8 @@ public class PruebaEquipamiento {
         } finally {
             archivoSocios.delete();
             archivoEquipo.delete();
+            archivoReservas.delete();
+            archivoFacturas.delete();
         }
 
         System.out.println("\n=== " + (fallos == 0 ? "TODAS LAS PRUEBAS OK" : fallos + " PRUEBA(S) FALLARON") + " ===");

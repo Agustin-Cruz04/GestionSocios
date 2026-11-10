@@ -90,7 +90,6 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
         }
     }
 
-    // facturacion devuelve el recargo y lo deja en cero
     public double cobrarRecargoPendiente() {
         double monto = recargoPendiente;
         recargoPendiente = 0;
@@ -112,7 +111,6 @@ public abstract class Socio implements Serializable, Comparable<Socio> {
         return Collections.unmodifiableList(listaAdvertencias());
     }
 
-    // Si el socio viene de un Socios.txt viejo llega null la lista
     private List<Advertencia> listaAdvertencias() {
         if (advertencias == null) {
             advertencias = new ArrayList<Advertencia>();
