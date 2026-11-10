@@ -156,7 +156,7 @@ public class Menu {
         }
     }
 
-    // EQUIPAMIENTO Y ALQUILERES
+    // Equipamiento y alquileres
 
     private void registrarEquipamiento() {
         String codigo = pedirTexto(Mensajes.PEDIR_CODIGO_EQUIPO);
