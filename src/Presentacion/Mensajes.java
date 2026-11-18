@@ -11,6 +11,7 @@ import LogicaNegocio.Reserva;
 import LogicaNegocio.Socio;
 import LogicaNegocio.TipoEquipamiento;
 import LogicaNegocio.TipoMembresia;
+import LogicaNegocio.Factura;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -62,6 +63,9 @@ public final class Mensajes {
                 + "11. Molinete (Check-in)" + n
                 + "--- Reportes ---" + n
                 + "12. Reportes y busquedas" + n
+                + "--- Facturacion ---" + n
+                + "13. Emitir factura de cuota mensual" + n
+                + "14. Ver historial de facturas de un socio" + n
                 + "0. Salir";
     }
 
@@ -388,5 +392,30 @@ public final class Mensajes {
 
     public static String recaudacionDelPeriodo(int anio, int mes, double total) {
         return "Recaudacion de " + String.format("%02d", mes) + "/" + anio + ": " + dinero(total);
+    }
+    
+    // FACTURACIÓN Y COMPROBANTES
+    public static final String PEDIR_FECHA_FACTURA = "Fecha de emision (dd/MM/yyyy, Enter = hoy): ";
+    public static final String ENCABEZADO_FACTURAS = "--- Historial de facturas del socio ---";
+
+    public static String facturaImpresa(Factura f) {
+        String n = System.lineSeparator();
+        return "========================================" + n
+                + "     COMPROBANTE DE FACTURACION         " + n
+                + "========================================" + n
+                + " Nro Comprobante : #" + f.getNumero() + n
+                + " DNI del Socio   : " + f.getDniSocio() + n
+                + " Tipo de Factura : " + f.getTipo() + n
+                + " Fecha Fiscal    : " + fecha(f.getFecha()) + n
+                + " Monto Total     : " + dinero(f.getMonto()) + n
+                + "========================================";
+    }
+
+    public static String lineaFactura(Factura f) {
+        return "Factura #" + f.getNumero() + " | [" + f.getTipo() + "] | Fecha: " + fecha(f.getFecha()) + " | Monto: " + dinero(f.getMonto());
+    }
+
+    public static String facturaEmitidaCorrectamente(Factura f) {
+        return "Factura generada exitosamente. Total a abonar: " + dinero(f.getMonto()) + " (Comprobante #" + f.getNumero() + ").";
     }
 }
