@@ -23,6 +23,7 @@ import LogicaNegocio.SocioNoEncontradoException;
 import LogicaNegocio.SocioVIP;
 import LogicaNegocio.TipoEquipamiento;
 import LogicaNegocio.Validaciones;
+import LogicaNegocio.Factura;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -88,6 +89,13 @@ public class Menu {
                     // REPORTES (TS3-02)
                     case 12:
                         menuReportes();
+                        break;
+                    // FACTURACIÓN (TS3-03)
+                    case 13:
+                        emitirFacturaCuotaSocio();
+                        break;
+                    case 14:
+                        verFacturasDeSocio();
                         break;
                     case 0:
                         mostrar(Mensajes.DESPEDIDA);
@@ -185,7 +193,40 @@ public class Menu {
             mostrar(Mensajes.errorAccesoMolinete(e.getMotivo(), e.getMotivoSancion()));
         }
     }
+    //Factura
+    private void emitirFacturaCuotaSocio() {
+        String dni = pedirTexto(Mensajes.PEDIR_DNI_SOCIO);
+        LocalDate fecha = pedirFechaOpcional(Mensajes.PEDIR_FECHA_FACTURA);
+        try {
+            Factura factura = logica.emitirFacturaCuota(dni, fecha);
+            mostrar(Mensajes.facturaEmitidaCorrectamente(factura));
+            mostrar(Mensajes.facturaImpresa(factura));
+        } catch (SocioNoEncontradoException e) {
+            mostrar(Mensajes.errorSocioNoEncontrado(e.getDni()));
+        } catch (DniInvalidoException e) {
+            mostrar(Mensajes.ERROR_DNI_INVALIDO);
+        } catch (PersistenciaException e) {
+            mostrar(Mensajes.errorPersistencia(e));
+        }
+    }
 
+    private void verFacturasDeSocio() {
+        String dni = pedirTexto(Mensajes.PEDIR_DNI_SOCIO);
+        try {
+            List<Factura> facturas = logica.facturasDeSocio(dni);
+            if (facturas.isEmpty()) {
+                mostrar(Mensajes.SIN_FACTURAS);
+                return;
+            }
+            mostrar(Mensajes.ENCABEZADO_FACTURAS);
+            for (Factura f : facturas) {
+                mostrar(Mensajes.lineaFactura(f));
+            }
+        } catch (DniInvalidoException e) {
+            mostrar(Mensajes.ERROR_DNI_INVALIDO);
+        }
+    }
+    /////////////
     private String pedirDniValido() {
         while (true) {
             String dni = pedirTexto(Mensajes.PEDIR_DNI);
