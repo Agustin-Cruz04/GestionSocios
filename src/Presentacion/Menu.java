@@ -213,19 +213,42 @@ public class Menu {
     private void verFacturasDeSocio() {
         String dni = pedirTexto(Mensajes.PEDIR_DNI_SOCIO);
         try {
-            List<Factura> facturas = logica.facturasDeSocio(dni);
-            if (facturas.isEmpty()) {
-                mostrar(Mensajes.SIN_FACTURAS);
-                return;
+            Socio socio = logica.consultarPorDni(dni);
+            int opcionFiltro = pedirEntero(Mensajes.PEDIR_OPCION_FILTRO);
+            List<Factura> facturas;
+
+            if (opcionFiltro == 1) {
+                int anio = pedirEnteroPositivo(Mensajes.PEDIR_ANIO);
+                int mes = pedirEntero(Mensajes.PEDIR_MES);
+                if (mes < 1 || mes > 12) {
+                    mostrar(Mensajes.MES_INVALIDO);
+                    return;
+                }
+                facturas = logica.facturasDeSocioEnPeriodo(dni, anio, mes);
+                if (facturas.isEmpty()) {
+                    mostrar(Mensajes.SIN_FACTURAS_PERIODO);
+                    return;
+                }
+                mostrar(Mensajes.encabezadoFacturasPeriodo(mes, anio, socio));
+            } else {
+                facturas = logica.facturasDeSocio(dni);
+                if (facturas.isEmpty()) {
+                    mostrar(Mensajes.SIN_FACTURAS_SOCIO);
+                    return;
+                }
+                mostrar(Mensajes.ENCABEZADO_FACTURAS);
             }
-            mostrar(Mensajes.ENCABEZADO_FACTURAS);
+
             for (Factura f : facturas) {
                 mostrar(Mensajes.lineaFactura(f));
             }
+        } catch (SocioNoEncontradoException e) {
+            mostrar(Mensajes.errorSocioNoEncontrado(e.getDni()));
         } catch (DniInvalidoException e) {
             mostrar(Mensajes.ERROR_DNI_INVALIDO);
         }
     }
+    
     /////////////
     private String pedirDniValido() {
         while (true) {

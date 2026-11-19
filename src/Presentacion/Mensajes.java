@@ -396,8 +396,15 @@ public final class Mensajes {
     
     // FACTURACIÓN Y COMPROBANTES
     public static final String PEDIR_FECHA_FACTURA = "Fecha de emision (dd/MM/yyyy, Enter = hoy): ";
+    public static final String PEDIR_OPCION_FILTRO = "¿Desea filtrar por periodo fiscal? (1 = Si, 2 = No): ";
     public static final String ENCABEZADO_FACTURAS = "--- Historial de facturas del socio ---";
+    public static final String SIN_FACTURAS_SOCIO = "El socio no registra comprobantes de facturacion.";
+    public static final String SIN_FACTURAS_PERIODO = "El socio no registra comprobantes para el periodo indicado.";
 
+    public static String encabezadoFacturasPeriodo(int mes, int anio, Socio socio) {
+        return "--- Historial de facturas para " + String.format("%02d/%04d", mes, anio)
+                + " (Socio: " + socio.getApellido() + ", " + socio.getNombre() + ") ---";
+    }
     public static String facturaImpresa(Factura f) {
         String n = System.lineSeparator();
         return "========================================" + n
